@@ -4,7 +4,7 @@
     ViewData["Title"] = "Calendar";
 
     // convert days into dictionary for fast lookup
-    var dayMap = Model.Days.ToDictionary(d => d.Date, d => d);
+    var dayMap = Model.Days.ToDictionary(d => d.Date);
 
     int year = Model.Year;
     int month = Model.Month;
@@ -27,7 +27,7 @@
     // fill month days
     for (int day = 1; day <= daysInMonth; day++)
     {
-        var date = new DateTime(year, month, day).ToString("yyyy-MM-dd");
+        var date = new DateOnly(year, month, day);
 
         if (dayMap.TryGetValue(date, out var existing))
         {
@@ -89,7 +89,7 @@
                                     "text-secondary";
 
                         <div class="col">
-                            <div class="small">@DateTime.Parse(day.Date).Day</div>
+                            <div class="small">@day.Date.Day</div>
 
                             <div class="@color">
                                 @if (day.Pnl != null)
