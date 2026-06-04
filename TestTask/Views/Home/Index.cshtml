@@ -1,0 +1,117 @@
+﻿@model TestTask.Models.CalendarMonth
+
+@{
+    ViewData["Title"] = "Calendar";
+
+    // convert days into dictionary for fast lookup
+    var dayMap = Model.Days.ToDictionary(d => d.Date, d => d);
+
+    int year = Model.Year;
+    int month = Model.Month;
+
+    var firstDay = new DateTime(year, month, 1);
+    int daysInMonth = DateTime.DaysInMonth(year, month);
+
+    // Sunday = 0 ... Saturday = 6
+    int firstWeekday = (int)firstDay.DayOfWeek;
+
+    // build flat list of calendar cells
+    var cells = new List<CalendarDay?>();
+
+    // leading empty cells
+    for (int i = 0; i < firstWeekday; i++)
+    {
+        cells.Add(null);
+    }
+
+    // fill month days
+    for (int day = 1; day <= daysInMonth; day++)
+    {
+        var date = new DateTime(year, month, day).ToString("yyyy-MM-dd");
+
+        if (dayMap.TryGetValue(date, out var existing))
+        {
+            cells.Add(existing);
+        }
+        else
+        {
+            cells.Add(new CalendarDay
+            {
+                Date = date,
+                Positions = null,
+                Pnl = null,
+                PNLPercent = null
+            });
+        }
+    }
+
+    // trailing empty cells to complete last week
+    while (cells.Count % 7 != 0)
+    {
+        cells.Add(null);
+    }
+}
+
+<div class="container mt-4">
+
+    <h2 class="text-center">
+        @Model.Year - @Model.Month (@Model.Currency)
+    </h2>
+
+    <div class="calendar">
+
+        <div class="row fw-bold text-center border-bottom pb-2">
+            <div class="col">Sunday</div>
+            <div class="col">Monday</div>
+            <div class="col">Tuesday</div>
+            <div class="col">Wednesday</div>
+            <div class="col">Thursday</div>
+            <div class="col">Friday</div>
+            <div class="col">Saturday</div>
+        </div>
+
+        @for (int i = 0; i < cells.Count; i += 7)
+        {
+            <div class="row text-center border-bottom py-2">
+
+                @for (int j = i; j < i + 7; j++)
+                {
+                    var day = cells[j];
+
+                    if (day == null)
+                    {
+                        <div class="col text-muted">-</div>
+                    }
+                    else
+                    {
+                        var color = (day.Pnl ?? 0) > 0 ? "text-success" :
+                                    (day.Pnl ?? 0) < 0 ? "text-danger" :
+                                    "text-secondary";
+
+                        <div class="col">
+                            <div class="small">@DateTime.Parse(day.Date).Day</div>
+
+                            <div class="@color">
+                                @if (day.Pnl != null)
+                                {
+                                    <div>@day.Pnl</div>
+                                    <div>@day.PNLPercent%</div>
+                                }
+                                else
+                                {
+                                    <div>No data</div>
+                                }
+                            </div>
+
+                            <div class="small text-muted">
+                                @(day.Positions?.ToString() ?? "0") pos
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+        }
+
+    </div>
+</div>
